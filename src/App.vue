@@ -1,8 +1,26 @@
 <template>
-  <div id="app">
+  <div id="app" :class="typeof weather.main != 'undefined' && weather.main.temp > 16 ? 'warm' : ''">
     <main>
       <div class="search-box">
-        <input type="text" class="search-bar" placeholder="Search...">
+        <input 
+          type="text"
+          class="search-bar" 
+          placeholder="Search..."
+          v-model="query"
+          @keypress="fetchWeather"
+        >
+      </div>
+
+      <div class="weather-wrap" v-if="typeof weather.main != 'undefined'">
+        <div class="location-box">
+          <div class="location">{{ weather.name }}, {{ weather.sys.country }}</div>
+          <div class="date">{{ dateBuilder() }}</div>
+        </div>
+
+        <div class="weather-box">
+          <div class="temp">{{ Math.round(weather.main.temp) }}°c</div>
+          <div class="weather">{{ weather.weather[0].main }}</div>
+        </div>
       </div>
     </main>
   </div>
@@ -15,7 +33,33 @@ export default {
   name: 'App',
   data () {
     return {
-      api_key: '675c93337bff9d6f69e341c7b811e64a'
+      api_key: '675c93337bff9d6f69e341c7b811e64a',
+      url_base: 'https://api.openweathermap.org/data/2.5/',
+      query: '',
+      weather: {}
+    }
+  },
+  methods: {
+    fetchWeather (e) {
+      if (e.key == "Enter") {
+        fetch(`${this.url_base}weather?q=${this.query}&units=metric&APPID=${this.api_key}`)
+        .then (res => {
+          return res.json();
+        }).then(this.setResults)
+      }
+    },
+    setResults (results) {
+      this.weather = results;
+    },
+    dateBuilder () {
+      let d = new Date();
+      let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      let day = days[d.getDay()];
+      let date = d.getDate();
+      let month = months[d.getMonth()];
+      let year = d.getFullYear();
+      return `${day} ${date} ${month} ${year}`;
     }
   }
 }
@@ -36,18 +80,23 @@ body {
   background-image: url('./assets/cold-bg.jpg');
   background-size: cover;
   background-position: bottom;
+  height: 640px;
+  width: 320px;
+  margin: 5rem auto 0;
   transition: 0.4s;
+}
+#app.warm {
+  background-image: url('./assets/warm-bg.jpg');
 }
 
 main {
-  min-height: 100vh;
+  height: 100%;
   padding: 25px;
-
   background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.75));
 }
 
 .search-box {
-  widows: 100%;
+  width: 100%;
   margin-bottom: 30px;
 }
 
